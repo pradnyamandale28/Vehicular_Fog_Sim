@@ -1,0 +1,31 @@
+<additional>
+
+    <!-- Safety-critical vehicles -->
+    <vType id="safety"
+           accel="3.0"
+           decel="6.0"
+           maxSpeed="25"
+           length="4.5" />
+
+    <!-- Control vehicles -->
+    <vType id="control"
+           accel="2.6"
+           decel="4.5"
+           maxSpeed="22"
+           length="4.7" />
+
+    <!-- Comfort vehicles -->
+    <vType id="comfort"
+           accel="2.2"
+           decel="4.0"
+           maxSpeed="20"
+           length="4.8" />
+
+    <!-- Infotainment vehicles -->
+    <vType id="infotainment"
+           accel="1.8"
+           decel="3.5"
+           maxSpeed="18"
+           length="5.0" />
+
+</additional>

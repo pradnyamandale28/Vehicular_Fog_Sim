@@ -1,0 +1,20 @@
+<configuration>
+
+    <input>
+        <net-file value="../net/urban.net.xml"/>
+        <route-files value="../routes/routes_400.rou.xml"/>
+        <additional-files value="../additional/vtypes.add.xml"/>
+    </input>
+
+    <time>
+        <begin value="0"/>
+        <end value="2000"/>
+        <step-length value="0.02"/>
+    </time>
+
+    <routing>
+        <device.rerouting.probability value="0.2"/>
+        <device.rerouting.period value="30"/>
+    </routing>
+
+</configuration>
