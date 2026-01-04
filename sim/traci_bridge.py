@@ -21,6 +21,10 @@ W_D = 0.4   # deadline
 W_C = 0.3   # criticality
 W_H = 0.2   # handoff risk
 W_L = 0.1   # fog load
+
+# Migration thresholds
+THETA_D = 0.7   # deadline pressure
+THETA_L = 0.7   # fog load
 # ============================================
 
 
@@ -42,6 +46,13 @@ def handoff_risk(r, current_fog):
 
 def fog_load_factor(fog_id, fog_load):
     return min(1.0, fog_load.get(fog_id, 0) / 10.0)
+
+
+def select_target_fog(current_fog, fog_load):
+    # pick least-loaded neighboring fog
+    candidates = [(fid, l) for fid, l in fog_load.items() if fid != current_fog]
+    candidates.sort(key=lambda x: x[1])
+    return candidates[0][0] if candidates else current_fog
 # ============================================
 
 
@@ -120,11 +131,22 @@ def run():
 
         urgency_list.sort(key=lambda x: x[0], reverse=True)
 
+        # ---------- UCM: Full-Chain Migration ----------
+        for U, r in urgency_list:
+            d = deadline_pressure(r, step)
+            l = fog_load_factor(r.fog, fog_load)
+
+            if d >= THETA_D or l >= THETA_L:
+                target = select_target_fog(r.fog, fog_load)
+                if target != r.fog:
+                    print(f"MIGRATE(UCM) req={r.id} {r.fog} -> {target}")
+                    fog_load[r.fog] -= 1
+                    r.fog = target
+                    fog_load[target] += 1
+
         # ---------- Light Debug ----------
         if step % 50 == 0:
             print(f"[t={step}] active={len(active_requests)}")
-            if urgency_list:
-                print(f"TOP_URGENCY {urgency_list[0][0]:.3f}")
 
     traci.close()
 
@@ -132,4 +154,3 @@ def run():
 if __name__ == "__main__":
     start_sumo()
     run()
-
