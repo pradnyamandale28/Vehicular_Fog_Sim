@@ -1,6 +1,7 @@
 import traci
 import random
 import uuid
+from collections import defaultdict
 
 # ================== CONFIG ==================
 SUMO_CFG = "sumo/config/sim.sumocfg"
@@ -17,14 +18,14 @@ REQUEST_PROB = 0.02
 MAX_DURATION = 300
 
 # Urgency weights
-W_D = 0.4   # deadline
-W_C = 0.3   # criticality
-W_H = 0.2   # handoff risk
-W_L = 0.1   # fog load
+W_D = 0.4
+W_C = 0.3
+W_H = 0.2
+W_L = 0.1
 
-# Migration thresholds
-THETA_D = 0.7   # deadline pressure
-THETA_L = 0.7   # fog load
+# Migration thresholds (UCM)
+THETA_D = 0.7
+THETA_L = 0.7
 # ============================================
 
 
@@ -49,7 +50,6 @@ def fog_load_factor(fog_id, fog_load):
 
 
 def select_target_fog(current_fog, fog_load):
-    # pick least-loaded neighboring fog
     candidates = [(fid, l) for fid, l in fog_load.items() if fid != current_fog]
     candidates.sort(key=lambda x: x[1])
     return candidates[0][0] if candidates else current_fog
@@ -65,7 +65,7 @@ class Request:
         self.start = t
         self.end = t + random.randint(50, MAX_DURATION)
 
-        self.criticality = random.choice([0, 1])  # 1 = safety
+        self.criticality = random.choice([0, 1])
         self.last_fog = fog_id
 # ===============================================
 
@@ -85,6 +85,12 @@ def run():
     active_requests = {}
     fog_load = {fid: 0 for fid in FOG_NODES}
 
+    # -------- Metrics --------
+    metrics = defaultdict(int)
+    latency_sum = 0
+    completed_requests = 0
+    # -------------------------
+
     while traci.simulation.getMinExpectedNumber() > 0:
         traci.simulationStep()
         step += 1
@@ -95,16 +101,16 @@ def run():
             fog = get_fog(x, y)
 
             if vid in prev_fog and prev_fog[vid] != fog:
-                print(f"HANDOFF {vid}: {prev_fog[vid]} -> {fog}")
+                metrics["handoffs"] += 1
 
             prev_fog[vid] = fog
 
             # ---------- Request Arrival ----------
-            if random.random() < REQUEST_PROB:
+            if fog is not None and random.random() < REQUEST_PROB:
                 r = Request(vid, fog, step)
                 active_requests[r.id] = r
                 fog_load[fog] += 1
-                print(f"NEW_REQ {r.id} vid={vid} fog={fog}")
+                metrics["requests_created"] += 1
 
         # ---------- Request Completion ----------
         finished = []
@@ -113,7 +119,11 @@ def run():
                 finished.append(rid)
 
         for rid in finished:
-            fog_load[active_requests[rid].fog] -= 1
+            r = active_requests[rid]
+            latency_sum += (r.end - r.start)
+            completed_requests += 1
+
+            fog_load[r.fog] -= 1
             del active_requests[rid]
 
         # ---------- Urgency Computation ----------
@@ -126,12 +136,11 @@ def run():
 
             U = W_D * d + W_C * c + W_H * h + W_L * l
             urgency_list.append((U, r))
-
             r.last_fog = r.fog
 
         urgency_list.sort(key=lambda x: x[0], reverse=True)
 
-        # ---------- UCM: Full-Chain Migration ----------
+        # ---------- UCM Migration ----------
         for U, r in urgency_list:
             d = deadline_pressure(r, step)
             l = fog_load_factor(r.fog, fog_load)
@@ -139,14 +148,29 @@ def run():
             if d >= THETA_D or l >= THETA_L:
                 target = select_target_fog(r.fog, fog_load)
                 if target != r.fog:
-                    print(f"MIGRATE(UCM) req={r.id} {r.fog} -> {target}")
                     fog_load[r.fog] -= 1
                     r.fog = target
                     fog_load[target] += 1
+                    metrics["migrations"] += 1
 
-        # ---------- Light Debug ----------
-        if step % 50 == 0:
-            print(f"[t={step}] active={len(active_requests)}")
+        # ---------- Periodic Log ----------
+        if step % 100 == 0:
+            avg_latency = (latency_sum / completed_requests) if completed_requests else 0
+            print(
+                f"[t={step}] active={len(active_requests)} "
+                f"migrations={metrics['migrations']} "
+                f"handoffs={metrics['handoffs']} "
+                f"avg_latency={avg_latency:.2f}"
+            )
+
+    # -------- Final Metrics --------
+    avg_latency = (latency_sum / completed_requests) if completed_requests else 0
+    print("\n=== FINAL METRICS (UCM) ===")
+    print(f"requests_created : {metrics['requests_created']}")
+    print(f"completed        : {completed_requests}")
+    print(f"handoffs         : {metrics['handoffs']}")
+    print(f"migrations       : {metrics['migrations']}")
+    print(f"avg_latency      : {avg_latency:.2f}")
 
     traci.close()
 
