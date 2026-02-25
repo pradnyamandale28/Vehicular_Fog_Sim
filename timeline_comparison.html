@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Migration Timeline Comparison: Reactive vs. Proactive</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+            font-family: Arial, Helvetica, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        #timeline-diagram {
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .timeline-label {
+            font-size: 14px;
+            font-weight: bold;
+            text-anchor: start;
+        }
+        .event-title {
+            font-size: 11px;
+            font-weight: bold;
+            text-anchor: middle;
+        }
+        .event-detail {
+            font-size: 9px;
+            text-anchor: middle;
+            fill: #666;
+        }
+        .time-marker {
+            font-size: 10px;
+            text-anchor: middle;
+            fill: #333;
+        }
+        .callout-text {
+            font-size: 10px;
+            text-anchor: middle;
+        }
+        .summary-text {
+            font-size: 10px;
+            text-anchor: start;
+        }
+        .legend-text {
+            font-size: 9px;
+            text-anchor: start;
+        }
+    </style>
+</head>
+<body>
+    <svg id="timeline-diagram" width="1200" height="700" xmlns="http://www.w3.org/2000/svg">
+        <!-- Title -->
+        <text x="600" y="35" font-size="18" font-weight="bold" text-anchor="middle" fill="#333">
+            Migration Timeline Comparison: Reactive vs. Proactive
+        </text>
+        
+        <!-- Vertical time markers (dashed lines) -->
+        <line x1="150" y1="80" x2="150" y2="500" stroke="#95A5A6" stroke-width="1" stroke-dasharray="5,5"/>
+        <line x1="350" y1="80" x2="350" y2="500" stroke="#95A5A6" stroke-width="1" stroke-dasharray="5,5"/>
+        <line x1="550" y1="80" x2="550" y2="500" stroke="#95A5A6" stroke-width="1" stroke-dasharray="5,5"/>
+        <line x1="750" y1="80" x2="750" y2="500" stroke="#95A5A6" stroke-width="1" stroke-dasharray="5,5"/>
+        <line x1="950" y1="80" x2="950" y2="500" stroke="#95A5A6" stroke-width="1" stroke-dasharray="5,5"/>
+        
+        <!-- Time labels at bottom -->
+        <text x="150" y="520" class="time-marker" font-weight="bold">t=0</text>
+        <text x="150" y="535" class="time-marker">Vehicle at Fog A</text>
+        
+        <text x="350" y="520" class="time-marker" font-weight="bold">t=1</text>
+        <text x="350" y="535" class="time-marker">Prediction Phase</text>
+        
+        <text x="550" y="520" class="time-marker" font-weight="bold">t=2</text>
+        <text x="550" y="535" class="time-marker">Pre-warming Phase</text>
+        
+        <text x="750" y="520" class="time-marker" font-weight="bold">t=3</text>
+        <text x="750" y="535" class="time-marker">Handoff Event</text>
+        
+        <text x="950" y="520" class="time-marker" font-weight="bold">t=4</text>
+        <text x="950" y="535" class="time-marker">Service Active</text>
+        
+        <!-- PCM TIMELINE (Top - Proactive) -->
+        <rect x="100" y="80" width="1000" height="120" rx="5" fill="#E8F8E8" stroke="#27AE60" stroke-width="3"/>
+        <text x="110" y="140" class="timeline-label" fill="#27AE60">PCM (Proactive)</text>
+        
+        <!-- PCM Event 1 (t=0) -->
+        <circle cx="150" cy="140" r="20" fill="#27AE60" opacity="0.3"/>
+        <text x="150" y="105" class="event-title">Vehicle at Fog A</text>
+        <text x="150" y="175" class="event-detail">Service executing</text>
+        
+        <!-- PCM Event 2 (t=1) -->
+        <circle cx="350" cy="140" r="25" fill="#3498DB" opacity="0.4"/>
+        <text x="350" y="105" class="event-title" fill="#3498DB">Mobility Prediction</text>
+        <text x="350" y="175" class="event-detail">Random Forest predicts Fog B</text>
+        <rect x="310" y="180" width="80" height="15" rx="3" fill="#27AE60"/>
+        <text x="350" y="190" font-size="8" text-anchor="middle" fill="white">99.9% accuracy</text>
+        
+        <!-- Arrow from t=1 to t=2 -->
+        <path d="M 375 140 L 525 140" stroke="#3498DB" stroke-width="2" fill="none" marker-end="url(#arrowhead-blue)"/>
+        
+        <!-- PCM Event 3 (t=2) -->
+        <rect x="525" y="120" width="50" height="40" fill="#E67E22" opacity="0.3" stroke="#E67E22" stroke-width="2"/>
+        <text x="550" y="105" class="event-title" fill="#E67E22">Pre-instantiate VNFs</text>
+        <text x="550" y="175" class="event-detail">Deploy containers on Fog B</text>
+        <text x="550" y="188" class="event-detail">~50MB container images</text>
+        
+        <!-- PCM Event 4 (t=3) - HANDOFF -->
+        <rect x="725" y="125" width="50" height="30" rx="5" fill="#27AE60"/>
+        <text x="750" y="105" class="event-title" fill="#27AE60">Lightweight Handoff</text>
+        <text x="750" y="175" class="event-detail">Transfer session state ONLY</text>
+        <text x="750" y="188" font-size="9" font-weight="bold" fill="#27AE60" text-anchor="middle">2MB state transfer</text>
+        
+        <!-- Small green box for size comparison -->
+        <rect x="740" y="128" width="20" height="20" fill="#27AE60"/>
+        <text x="750" y="142" font-size="8" text-anchor="middle" fill="white">2MB</text>
+        
+        <text x="820" y="140" font-size="9" fill="#27AE60">~5ms latency</text>
+        
+        <!-- PCM Event 5 (t=4) -->
+        <circle cx="950" cy="140" r="15" fill="#27AE60"/>
+        <text x="950" y="145" font-size="20" text-anchor="middle" fill="white">✓</text>
+        <text x="950" y="105" class="event-title" fill="#27AE60">Service Active on Fog B</text>
+        <text x="950" y="175" class="event-detail" fill="#27AE60">No interruption</text>
+        
+        <!-- UCM TIMELINE (Bottom - Reactive) -->
+        <rect x="100" y="240" width="1000" height="120" rx="5" fill="#FFE6E6" stroke="#E74C3C" stroke-width="3"/>
+        <text x="110" y="300" class="timeline-label" fill="#E74C3C">UCM (Reactive)</text>
+        
+        <!-- UCM Event 1 (t=0) -->
+        <circle cx="150" cy="300" r="20" fill="#E74C3C" opacity="0.3"/>
+        <text x="150" y="265" class="event-title">Vehicle at Fog A</text>
+        <text x="150" y="335" class="event-detail">Service executing</text>
+        
+        <!-- UCM Event 2 (t=1) - No action -->
+        <circle cx="350" cy="300" r="25" fill="none" stroke="#999" stroke-width="2" stroke-dasharray="5,5"/>
+        <text x="350" y="265" class="event-title" fill="#999">No Action</text>
+        <text x="350" y="335" class="event-detail">No prediction performed</text>
+        
+        <!-- UCM Event 3 (t=2) - No preparation -->
+        <circle cx="550" cy="300" r="25" fill="none" stroke="#999" stroke-width="2" stroke-dasharray="5,5"/>
+        <text x="550" y="265" class="event-title" fill="#999">No Preparation</text>
+        <text x="550" y="335" class="event-detail">Waiting for handoff trigger</text>
+        
+        <!-- UCM Event 4 (t=3) - FULL MIGRATION -->
+        <rect x="700" y="270" width="100" height="60" rx="5" fill="#E74C3C" opacity="0.3" stroke="#E74C3C" stroke-width="2"/>
+        <text x="750" y="265" class="event-title" fill="#E74C3C">Full Migration Triggered</text>
+        <text x="750" y="335" class="event-detail">Transfer ALL VNFs + state</text>
+        <text x="750" y="348" font-size="9" font-weight="bold" fill="#E74C3C" text-anchor="middle">~200MB total transfer</text>
+        
+        <!-- Large red box for size comparison -->
+        <rect x="710" y="280" width="80" height="40" fill="#E74C3C"/>
+        <text x="750" y="303" font-size="10" text-anchor="middle" fill="white" font-weight="bold">200MB</text>
+        
+        <text x="820" y="300" font-size="9" fill="#E74C3C">~200ms latency</text>
+        
+        <!-- UCM Event 5 (t=4) - Delayed -->
+        <circle cx="950" cy="300" r="15" fill="#F39C12"/>
+        <text x="950" y="307" font-size="16" text-anchor="middle" fill="white">!</text>
+        <text x="950" y="265" class="event-title">Service Active on Fog B</text>
+        <text x="950" y="335" class="event-detail" fill="#E74C3C">After cold-start delay</text>
+        
+        <!-- Comparison Callouts -->
+        
+        <!-- Callout 1 (t=1) -->
+        <rect x="280" y="205" width="140" height="30" fill="white" stroke="#666" stroke-width="1"/>
+        <text x="350" y="218" class="callout-text" fill="#27AE60">PCM predicts early ↑</text>
+        <text x="350" y="230" class="callout-text" fill="#E74C3C">UCM waits ↓</text>
+        
+        <!-- Callout 2 (t=2) -->
+        <rect x="460" y="205" width="180" height="30" fill="white" stroke="#666" stroke-width="1"/>
+        <text x="550" y="215" class="callout-text" fill="#27AE60">PCM pre-warms ↑</text>
+        <text x="550" y="225" class="callout-text" font-size="8">50MB transferred proactively</text>
+        <text x="550" y="233" class="callout-text" fill="#E74C3C">UCM idle ↓</text>
+        
+        <!-- Callout 3 (t=3) - MAIN COMPARISON -->
+        <rect x="650" y="368" width="280" height="90" fill="#FFFACD" stroke="#F39C12" stroke-width="2"/>
+        <text x="790" y="385" font-size="12" font-weight="bold" text-anchor="middle">MIGRATION OVERHEAD COMPARISON</text>
+        <text x="790" y="405" font-size="11" text-anchor="middle" fill="#27AE60">PCM: 2MB (session state only)</text>
+        <text x="790" y="422" font-size="11" text-anchor="middle" fill="#E74C3C">UCM: 200MB (full VNFs + state)</text>
+        <text x="790" y="442" font-size="11" font-weight="bold" text-anchor="middle" fill="#27AE60">90% reduction ✓</text>
+        
+        <!-- Legend (Top-Right) -->
+        <rect x="990" y="60" width="190" height="120" fill="white" stroke="#666" stroke-width="1"/>
+        <text x="1085" y="78" font-size="11" font-weight="bold" text-anchor="middle">Legend</text>
+        
+        <circle cx="1005" cy="93" r="8" fill="#27AE60" opacity="0.5"/>
+        <text x="1020" y="98" class="legend-text">Active processing</text>
+        
+        <circle cx="1005" cy="113" r="8" fill="none" stroke="#999" stroke-dasharray="2,2"/>
+        <text x="1020" y="118" class="legend-text">No activity</text>
+        
+        <circle cx="1005" cy="133" r="8" fill="#27AE60"/>
+        <text x="1010" y="138" font-size="8" fill="white">✓</text>
+        <text x="1020" y="138" class="legend-text">Success</text>
+        
+        <circle cx="1005" cy="153" r="8" fill="#F39C12"/>
+        <text x="1010" y="158" font-size="8" fill="white">!</text>
+        <text x="1020" y="158" class="legend-text">Warning/delay</text>
+        
+        <!-- Summary Box (Bottom) -->
+        <rect x="300" y="570" width="600" height="110" fill="#F0F8FF" stroke="#666" stroke-width="2"/>
+        <text x="600" y="590" font-size="12" font-weight="bold" text-anchor="middle">PCM Advantages:</text>
+        
+        <text x="320" y="610" class="summary-text">• Proactive preparation eliminates cold-start latency</text>
+        <text x="320" y="630" class="summary-text">• 90% reduction in migration overhead (2MB vs 200MB)</text>
+        <text x="320" y="650" class="summary-text">• 40x faster handoff (5ms vs 200ms)</text>
+        <text x="320" y="670" class="summary-text">• Seamless service continuity for safety-critical applications</text>
+        
+        <!-- Arrow markers -->
+        <defs>
+            <marker id="arrowhead-blue" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                <polygon points="0 0, 10 3, 0 6" fill="#3498DB"/>
+            </marker>
+        </defs>
+    </svg>
+</body>
+</html>
